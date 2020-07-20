@@ -10,12 +10,14 @@
     "unit": "jest --config test/unit/jest.conf.js --coverage",
     "e2e": "node test/e2e/runner.js",
     "test": "npm run unit && npm run e2e",
-    "build": "node build/build.js"
+    "build": "node build/build.js",
+    "postinstall": "npm run build"
   },
   "dependencies": {
     "axios": "^0.19.2",
     "vue": "^2.5.2",
-    "vue-router": "^3.0.1"
+    "vue-router": "^3.0.1",
+    "path": "^0.12.7"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",
