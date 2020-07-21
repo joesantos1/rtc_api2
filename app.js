@@ -44,6 +44,6 @@ app.use(session({
 router.use('/', rotasUser);
 router.use('/cadquest', rotasAdm);
 
-app.use('/api', router);
+app.use('/', router);
 
 module.exports = app;

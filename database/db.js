@@ -1,7 +1,7 @@
 const Sequelize = require("sequelize");
 
 const sequelize = new Sequelize('bd_rtchamp', 'blackaguia1', 'apq0x12Z',{
-    host: 'localhost',
+    host: 'mysql669.umbler.com',
     dialect: 'mysql'
 });
 
