@@ -585,8 +585,6 @@ router.post('/cadastrouser', validaEMAIL, async (req, res) => {
 
         const { nome, nick, email, pass, pass_confirm } = req.body;
 
-    req.session.DADOSFORM = { nome: nome, nick: nick, email: email }
-
     //VERIFICA CAMPOS VAZIOS
     var error = { error: {  
             msg: 'Por favor, digite seu nome completo.',
