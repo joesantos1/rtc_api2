@@ -1,7 +1,10 @@
+require('dotenv').config();
+
 const express = require('express');
 const bodyParser = require('body-parser');
 //const session = require('express-session');
 const cors = require('cors')
+const path = require('path')
 
 const app = express();
 
@@ -13,6 +16,8 @@ app.use(cors());
 
 const rotasUser = require('./routes/userRoutes');
 const rotasAdm = require('./routes/admiRoutes');
+
+app.use('/files', express.static(path.resolve(__dirname, "tmp", "uploads")))
 
 //CONFIGURAÇÕES DE SESSAO
 /*
@@ -42,7 +47,7 @@ app.use(session({
 //FIM DAS CONFIGURAÇÕES DE SESSAO
 
 router.use('/', rotasUser);
-router.use('/cadquest', rotasAdm);
+router.use('/', rotasAdm);
 
 app.use('/', router);
 

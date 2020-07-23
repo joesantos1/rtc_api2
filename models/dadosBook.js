@@ -1,6 +1,6 @@
 const db = require('../database/db');
 
-const RankingP = db.sequelize.define('books',{
+const modelBooks = db.sequelize.define('books',{
     book_titulo: {
         type: db.Sequelize.STRING
     },
@@ -8,6 +8,12 @@ const RankingP = db.sequelize.define('books',{
         type: db.Sequelize.STRING
     },
     book_capa: {
+        type: db.Sequelize.STRING
+    },
+    book_capa_key: {
+        type: db.Sequelize.STRING
+    },
+    book_capa_url: {
         type: db.Sequelize.STRING
     },
     book_link1: {
@@ -26,6 +32,9 @@ const RankingP = db.sequelize.define('books',{
     book_total_topic: {
         type: db.Sequelize.INTEGER,
     },
+    book_status: {
+        type: db.Sequelize.INTEGER
+    }
 });
 
-module.exports = RankingP;
+module.exports = modelBooks;

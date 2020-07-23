@@ -653,7 +653,6 @@ router.post('/userauth', async (req, res) => {
     
     
     const { nick, pass } = req.body
-
     
 
     var nickVazio = validator.isEmpty(nick);
@@ -1076,7 +1075,5 @@ router.put('/updateuser', authMiddlew, async (req, res) => {
         return res.status(400);
     })
 })
-
-
 
 module.exports = router
