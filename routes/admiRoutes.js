@@ -131,6 +131,35 @@ router.get('/app/adm/authvuser', authMiddlewAdm, (req, res) => {
     return res.status(200).send({loggin: true});
 })
 
+router.get('/app/adm/rtq/:id', authMiddlewAdm, (req, res) => {
+    try {
+
+        qUest.findOne({where: {'id': req.params.id}}).then(async r => {
+
+            const b = await dBook.findOne({where: {'id': r.questions_book_id}})
+            const c = await dUser.findOne({where: {'id': r.questions_creator}})
+
+            return res.status(200).send({
+                book: b.book_titulo,
+                resposta: r.questions_resposta,
+                detalhes: r.questions_detalhes,
+                op1: r.questions_op1,
+                op2: r.questions_op2,
+                op3: r.questions_op3,
+                op4: r.questions_op4,
+                pergunta: r.questions_pergunta,
+                creator: c.users_nick,
+                data: r.createdAt,
+                status: r.questions_status
+            })
+        })
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(400).send({error})
+    }
+})
+
 // -------------- POST ------
 router.post('/app/adm/userauth', async (req, res) => {
 
@@ -207,6 +236,59 @@ router.post('/upcapa/:id',authMiddlewAdm, multer(multerConfig).single('file'), a
     
 })
 
+router.post('/upnewcapa/:id',authMiddlewAdm, multer(multerConfig).single('file'), async (req, res) => {
+
+    try {
+        const { originalname: name, key } = req.file
+
+        const urlcapa = process.env.APP_URL + '/files/' + key
+
+        if(req.params.id!='new'){
+            fs.unlink(path.resolve(__dirname, '..','tmp','uploads', req.params.id), (error) => {
+                if(error) console.log(error);
+            })
+        }
+            
+        return res.status(200).send({ urlcapa,key })
+
+
+    } catch (error) {
+        console.log(error);
+        return res.status(400);
+    }
+
+    
+})
+
+router.post('/app/adm/bookscre', authMiddlewAdm, (req, res) => {
+    try {
+        
+        const { titulo, autor, descricao, status, link, ckey, curl } = req.body
+
+        for(var v in req.body){
+            if(req.body[v] == null){
+                return res.status(400).send({msg: 'Por favor, preencha todos os campos.'})
+            }
+        }
+
+        dBook.create({
+            book_titulo: titulo,
+            book_autor: autor,
+            book_capa_key: ckey,
+            book_capa_url: curl,
+            book_status: status,
+            book_descricao: descricao,
+            book_link1: link
+        }).then(() => {
+            return res.status(200).send({sucess:true})
+        })
+
+    } catch (error) {
+        console.log(error);
+        return res.status(400)
+    }
+});
+
 //--------------- PUT -------
 router.put('/app/adm/rtq', authMiddlewAdm, (req, res) => {
     
@@ -243,6 +325,54 @@ router.put('/app/adm/booksupd', authMiddlewAdm, (req, res) => {
     } catch (error) {
         console.log(error);
         return res.status(400)
+    }
+})
+
+router.put('/changestatus', authMiddlewAdm, async (req, res) => {
+    try {
+        
+        const {id, status, tb } = req.body
+
+        if(tb=='books'){
+            await dBook.update({ 'book_status': status }, { where: {'id': id}})
+        }
+
+        return res.status(200).send({sucess:true})
+
+    } catch (error) {
+        console.log(error);
+        return res.status(400)
+    }
+})
+
+router.put('/app/adm/updrtq', authMiddlewAdm, (req, res) => {
+    try {
+
+        const { pergunta, resposta, detalhes, op1, op2, op3, op4, status, id } = req.body
+
+        for(var v in req.body){
+            if(req.body[v] == null){
+                throw 'ERROR: Preencha todos os campos.'
+            }
+        }
+
+        qUest.update({
+            questions_detalhes: detalhes,
+            questions_op1: op1,
+            questions_op2: op2,
+            questions_op3: op3,
+            questions_op4: op4,
+            questions_pergunta: pergunta,
+            questions_resposta: resposta,
+            questions_status: status
+        },
+        { where: {'id': id }}).then(() => {
+            return res.status(200).send({sucess:true})
+        })
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(400).send({error})
     }
 })
 

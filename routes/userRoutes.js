@@ -33,12 +33,12 @@ router.get('/', async (req, res) => {
            await dBook.update({ book_total_rt: totalRt }, { where: { id: bk1.rows[i].id }})
         }
 
-        const bkAtualizado = await dBook.findAndCountAll({
+        const bkAtualizado = await dBook.findAndCountAll({where: {'book_status': 1}},{
             order: [['book_total_rt', 'DESC']]
         });
         
 
-//DADOS PARA TELA INICIAL DE LIVROS MAIS LIDOS --------- 
+        //DADOS PARA TELA INICIAL DE LIVROS MAIS LIDOS --------- 
         for(var i = 0; i <= bkAtualizado.count-1; i++){
 
             var idBook = bkAtualizado.rows[i].id
