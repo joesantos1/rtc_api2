@@ -77,7 +77,7 @@ router.get('/app/adm/books',authMiddlewAdm, async (req, res) => {
 
             const b = []
 
-            for(var i=0;i< rb.count-1;i++){
+            for(var i=0;i <= rb.count-1;i++){
                 
                 var lb = rb.rows[i].dataValues
 
@@ -105,7 +105,6 @@ router.get('/app/adm/books',authMiddlewAdm, async (req, res) => {
         console.log(error);
         return res.status(400)
     }
-
     
 
 });
@@ -152,6 +151,36 @@ router.get('/app/adm/rtq/:id', authMiddlewAdm, (req, res) => {
                 data: r.createdAt,
                 status: r.questions_status
             })
+        })
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(400).send({error})
+    }
+})
+
+router.get('/app/adm/lusers', authMiddlewAdm, (req, res) => {
+    try {
+
+        dUser.findAndCountAll({order: [['id', 'DESC']]}).then(async rsul => {
+
+            const u = []
+            const t = rsul.count
+
+            for(var i=0;i<=rsul.count-1;i++){
+
+                var r = rsul.rows[i].dataValues
+
+                var rts = await rTsch.count({where: {'rts_user_id': r.id}});
+
+                u[i] = {
+                    rts,
+                    r
+                }
+
+            }
+
+            return res.status(200).send({u, t})
         })
         
     } catch (error) {

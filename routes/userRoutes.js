@@ -47,7 +47,7 @@ router.get('/', async (req, res) => {
                     totalRt: bkAtualizado.rows[i].book_total_rt,
                     titulo: bkAtualizado.rows[i].book_titulo,
                     link: bkAtualizado.rows[i].book_link1,
-                    capa: bkAtualizado.rows[i].book_capa,
+                    capa: bkAtualizado.rows[i].book_capa_url,
                     autor: bkAtualizado.rows[i].book_autor,
                     idBook,
                     position: i + 1
@@ -85,78 +85,101 @@ router.get('/bookinfor/:id', async (req, res) => {
 
 router.get('/rtbook/:id',authMiddlew, async (req, res) => {
 
+    try {
+
     const USERID = req.userId.id
     const authHeader = req.headers.authorization;
 
-    //CARREGA PÁGINA DE RT DO LIVRO ----------------->
+    //CARREGA RT DO LIVRO ----------------->
 
     const verificaRT = await rTsch.findAndCountAll({
         where: { 'rts_user_id': USERID, 'rts_book_id': req.params.id, 'rts_resultado': 1 }
     });
-    
+
+    //VERIFICA QUAIS QUESTÕES DENTRO DO RT JÁ FORAM REALIZADAS PELO USUÁRIO
     var excluiQuestao = []
+    var excluiTotal = 0
 
     if(verificaRT){
         for(var i=0; i<=verificaRT.count-1;i++){
             excluiQuestao[i] = verificaRT.rows[i].dataValues.rts_question_id
         }
+        
+        excluiTotal = verificaRT.count
     }
-    
-
-    console.log('QUESTOES EXCLUIDAS: ' + excluiQuestao);
     
     //BUSCA INFOR DO BOOK
     dBook.findOne({
         where: { 'id': req.params.id }
     }).then(async (bki) => {
-        //BUSCA DADOS DA QUESTAO
+
+        //VERIFICA ULTIMA QUESTÃO REALIZADA NO RT ATUAL E TRAZ UMA QUESTÃO DIFERENTE
+        const vqr = await rTsch.findOne({where: {'rts_book_id': bki.id, 'rts_user_id': USERID}}, {order: [['id', 'DESC']]});
+
+        if(vqr){
+            excluiQuestao[excluiTotal-1] = vqr.rts_question_id
+        }
+
+        //BUSCA DADOS DA PROXIMA QUESTAO - QUESTOES APROVADAS TEM STATUS: 1
         qUest.findOne({
-            where: { 'questions_book_id': bki.id, 'id':{[Op.not]: excluiQuestao} }
+            where: { 
+                'questions_book_id': bki.id, 
+                'id':{[Op.not]: excluiQuestao}, 
+                'questions_status': 1 
+            }
+        }).then(async qti => {
 
-        }).then(qti => {
-            //VERIFICA QUAIS QUESTÕES DENTRO DO RT JÁ FORAM REALIZADAS PELO USUÁRIO
+            //BUSCA NICK DO CRIADOR DA QUESTÃO
+            const u = await dUser.findOne({where: {'id': qti.questions_creator}})
+            
+            rTsch.create({
 
-                    rTsch.create({
+                rts_question_id: qti.id,
+                rts_question_pergunta: qti.questions_pergunta,
+                rts_user_id: USERID,
+                rts_timein: dateNow(),
+                rts_book_id: bki.id,
+                rts_book_titulo: bki.book_titulo,
+                rts_resultado: 0,
+                rts_user_token: authHeader
 
-                        rts_question_id: qti.id,
-                        rts_question_pergunta: qti.questions_pergunta,
-                        rts_user_id: USERID,
-                        rts_timein: dateNow(),
-                        rts_book_id: bki.id,
-                        rts_book_titulo: bki.book_titulo,
-                        rts_resultado: 0,
-                        rts_user_token: authHeader
+            }).then(() => {
 
-                    }).then(() => {
-        
-                       rTsch.findOne({
-                            where: { 'rts_user_id': USERID, 'rts_resultado':0 },
-                            order: [['id', 'DESC']]
-                        }).then(qst => {
-                            res.status(200).send({
-                                
-                                qpergunta: qti.questions_pergunta,
-                                qop1: qti.questions_op1,
-                                qop2: qti.questions_op2,
-                                qop3: qti.questions_op3,
-                                qop4: qti.questions_op4,
-                                qdetalhes: qti.questions_detalhes,
-                                btitulo: bki.book_titulo,
-                                rri: qst.id,
-                                qqi: qti.id,
-                                resps: false,
-                                TOPO: false
-                            })
-                        }).catch(function (erro) { console.log('Erro ao CARREGAR RT: ' + erro); })
-        
-                    }).catch(function (erro) { console.log('Erro ao cadastrar RT: ' + erro); })
+                rTsch.findOne({
+                    where: { 'rts_user_id': USERID, 'rts_resultado':0 },
+                    order: [['id', 'DESC']]
+                }).then(qst => {
+                    res.status(200).send({
+                        
+                        qpergunta: qti.questions_pergunta,
+                        qop1: qti.questions_op1,
+                        qop2: qti.questions_op2,
+                        qop3: qti.questions_op3,
+                        qop4: qti.questions_op4,
+                        qdetalhes: qti.questions_detalhes,
+                        btitulo: bki.book_titulo,
+                        rri: qst.id,
+                        qqi: qti.id,
+                        resps: false,
+                        creator: u.users_nick
+                    })
+                }).catch(function (erro) { throw 'Erro ao CARREGAR RT: ' + erro })
+
+            }).catch(function (erro) { throw 'Erro ao cadastrar RT: ' + erro; })
 
         }).catch(function (erro) {
             res.status(400).send({RTcompleto: true})
-             console.log('Erro ao carregar a questão: ' + erro) 
+             throw 'Erro ao carregar a questão: ' + erro
             });
 
-    }).catch(function (erro) { console.log('Erro ao carregar o livro: ' + erro); })
+    }).catch(function (erro) { throw 'Erro ao carregar o livro: ' + erro; })
+
+    } catch (error) {
+        console.log(error);
+        return res.status(400).send({err: 'Error'})
+    }
+
+    
 
 });
 
