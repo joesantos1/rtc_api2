@@ -189,6 +189,46 @@ router.get('/app/adm/lusers', authMiddlewAdm, (req, res) => {
     }
 })
 
+router.get('/app/adm/userdata/:id', authMiddlewAdm, (req, res) => {
+    try {
+
+        const uid = req.params.id
+
+        dUser.findOne({where: {'id': uid}}).then(async r => {
+
+            r.users_pass = null
+
+            //TRAZ TODOS OS DADOS DE RT REALIZADO PELO USUÁRIO
+            const urt = await rTsch.findAndCountAll({where: {'rts_user_id': uid}})
+
+            const urts = []
+            const uque = []
+
+            for(var v in urt.rows){
+                urts[v] = urt.rows[v]
+            }
+
+            const uqu = await qUest.findAndCountAll({where: {'questions_creator': uid}})
+
+            for(var v in uqu.rows){
+                uque[v] = uqu.rows[v]
+            }
+
+            return res.status(200).send({
+                    r,
+                    urts,
+                    uque,
+                    totalQuestion: uqu.count,
+                    totalRT: urt.count
+            })
+        })
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(400).send({error})
+    }
+})
+
 // -------------- POST ------
 router.post('/app/adm/userauth', async (req, res) => {
 
@@ -364,6 +404,9 @@ router.put('/changestatus', authMiddlewAdm, async (req, res) => {
 
         if(tb=='books'){
             await dBook.update({ 'book_status': status }, { where: {'id': id}})
+        }
+        else if(tb=='users'){
+            await dUser.update({ 'users_status': status },{where: {'id': id}})
         }
 
         return res.status(200).send({sucess:true})
