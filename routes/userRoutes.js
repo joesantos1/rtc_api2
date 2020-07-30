@@ -589,7 +589,8 @@ router.get('/bookcommunitytopic/:id', authMiddlew, async (req, res) => {
     
 })
 
-router.get('/listabooksnewrt', authMiddlew, (req, res) => {
+router.get('/listabooksnewrt', (req, res) => {
+
     dBook.findAndCountAll({where: {'book_status': 1}, order: [['book_titulo', 'ASC']]}).then((r) => {
 
         const b = []
@@ -602,6 +603,7 @@ router.get('/listabooksnewrt', authMiddlew, (req, res) => {
         }
 
        return res.status(200).send({b})
+
     }).catch(error => {
         console.log(error);
         return res.status(400);
@@ -1031,6 +1033,49 @@ router.post('/newrt', authMiddlew, async (req, res) => {
             questions_resposta: resposta,
             questions_detalhes: detalhes,
             questions_creator: req.userId.id,
+            questions_status: 2
+       }).then(() => {
+           return res.status(200).send({sucess: true})
+       })
+        
+    } catch (error) {
+        res.status(400);
+        console.log(error);
+        return 
+    }
+})
+
+router.post('/newrttmp', async (req, res) => {
+    try {
+
+       const { pergunta, detalhes, op1, op2, op3, op4, resposta, book, idu } = req.body
+
+       const vazio = [
+           validator.isEmpty(pergunta),
+           validator.isEmpty(detalhes),
+           validator.isEmpty(op1),
+           validator.isEmpty(op2),
+           validator.isEmpty(op3),
+           validator.isEmpty(op4),
+           validator.isEmpty(resposta),
+       ]
+
+       const vz = vazio.find(v => v == true)
+
+       if(vz && !book){
+           return res.status(400).send({error: 'Por favor, preencha todos os campos obrigatórios.'})
+       }
+
+       qUest.create({
+            questions_book_id: book,
+            questions_pergunta: pergunta,
+            questions_op1: op1,
+            questions_op2: op2,
+            questions_op3: op3,
+            questions_op4: op4,
+            questions_resposta: resposta,
+            questions_detalhes: detalhes,
+            questions_creator: idu,
             questions_status: 2
        }).then(() => {
            return res.status(200).send({sucess: true})
