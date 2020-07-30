@@ -1,4 +1,5 @@
 const express = require('express');
+
 const dUser = require('../models/dadosUser');
 const dBook = require('../models/dadosBook');
 const qUest = require('../models/dadosQuestions');
@@ -7,11 +8,17 @@ const sOcia = require('../models/social');
 const sOmsg = require('../models/socialMsg');
 const lIkes = require('../models/likes');
 const cOmpl = require('../models/complaints');
+
+
 const moment = require('moment');
 const { Op } = require("sequelize");
 const { atualizaRanking, tRTandTopicsBooks, validaEMAIL, dateNow, dateNow2, generateToken, LikesCompls } = require('../src/utils');
 const bcrypt = require('bcryptjs');
-const authMiddlew = require('../src/middlewares/auth')
+const authMiddlew = require('../src/middlewares/auth');
+const multer = require('multer');
+const multerConfig = require('../src/middlewares/multer.js');
+const aws = require('aws-sdk');
+const s3 = new aws.S3();
 
 const validator = require('validator');
 
@@ -271,7 +278,8 @@ router.get('/datauser', authMiddlew, (req, res) => {
                 cidade: u.users_cidade,
                 estado: u.users_estado,
                 nasc: u.users_nasc,
-                nick: u.users_nick
+                nick: u.users_nick,
+                foto: u.users_foto_url
             
         })
     }).catch(error => {
@@ -420,7 +428,7 @@ router.get('/comunity', async (req, res) => {
                     totalRt: bkAtualizado.rows[i].book_total_topic,
                     titulo: bkAtualizado.rows[i].book_titulo,
                     link: bkAtualizado.rows[i].book_link1,
-                    capa: bkAtualizado.rows[i].book_capa,
+                    capa: bkAtualizado.rows[i].book_capa_url,
                     autor: bkAtualizado.rows[i].book_autor,
                     idBook,
                     position: i + 1
@@ -1032,6 +1040,45 @@ router.post('/newrt', authMiddlew, async (req, res) => {
         res.status(400);
         console.log(error);
         return 
+    }
+})
+
+router.post('/upfotouser', authMiddlew, multer(multerConfig).single('file'), async (req, res) => {
+
+    try {
+
+        const UID = req.userId.id
+
+        const { key } = req.file
+
+        const foto = process.env.APP_URL + key
+
+        dUser.findOne({where: {'id': UID}}).then(async r => {
+
+            if(r.users_foto_key){
+                if(process.env.STORAGE_TYPES == 's3'){
+                    s3.deleteObject({
+                        Bucket: 'rtcimages',
+                        Key: r.users_foto_key
+                    }).promise()
+                }else{
+                    fs.unlink(path.resolve(__dirname, '..','tmp','uploads', r.users_foto_key), (error) => {
+                        if(error) console.log(error);
+                    })
+                }
+            }
+
+            dUser.update({users_foto_key: key, users_foto_url: foto}, {where: {'id': UID }}).then(() => {
+
+                return res.status(200).send({foto});
+
+            })
+
+        })
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(400).send({msg: 'Erro no upload.'})
     }
 })
 

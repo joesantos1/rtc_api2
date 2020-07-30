@@ -5,6 +5,12 @@ const { createPool } = require('mysql');
 const multerS3 = require('multer-s3');
 const aws = require('aws-sdk');
 
+aws.config.update({
+    secretAccessKey: process.env.AWS_SECRET_ACESS_KEY,
+    accessKeyId: process.env.AWS_ACESS_KEY_ID,
+    region: process.env.AWS_DEFAULT_REGION
+})
+
 const storageTypes = {
     local: multer.diskStorage({
         destination: (req, file, cb) => {
@@ -39,7 +45,7 @@ const storageTypes = {
 
 module.exports = {
     dest: path.resolve(__dirname, '..', '..','tmp','uploads'),
-    storage: storageTypes["local"],
+    storage: storageTypes[process.env.STORAGE_TYPES],
     limits: {
         fileSize: 2 * 1024 * 1024,
     },

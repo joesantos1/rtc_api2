@@ -37,12 +37,18 @@ module.exports = {
                 order: [['users_rtp', 'DESC']]
             })
 
+            var foto = ''
+
             for (var i = 0; i <= 100-1; i++) {
+
+                var du = result[i] == undefined ? false : result[i].dataValues 
+
                 var calcPremio = calcPosRank(Rpremio, i)
                 var positionR = PRCR[i].position;
                 var calcRtp = () => {
+
                     if(result[i]){
-                        return result[i].dataValues.users_rtp
+                        return du.users_rtp
                     }else{
                         return 0;
                     }
@@ -50,17 +56,28 @@ module.exports = {
 
                 var nickRank = () => {
                     if(result[i]){
-                        return result[i].dataValues.users_nick
+                        return du.users_nick
                     }else{
                         return 0;
                     }
+                }
+
+                if(result[i]){
+                    if(du.users_foto_url){
+                        foto = du.users_foto_url
+                    }else{
+                        foto = process.env.APP_URL + 'no-foto.jpeg'
+                    }
+                }else{
+                    foto = process.env.APP_URL + 'no-foto.jpeg'
                 }
 
                 RANK[i] = {
                     premio: calcPremio,
                     pos: positionR,
                     rtp: calcRtp(),
-                    nick: nickRank()
+                    nick: nickRank(),
+                    foto: foto
                 };
             }
 

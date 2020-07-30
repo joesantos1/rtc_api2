@@ -20,6 +20,8 @@ const multerConfig = require('../src/middlewares/multer.js');
 const fs = require('fs');
 const path = require('path');
 const { promisify } = require('util');
+const aws = require('aws-sdk');
+const s3 = new aws.S3();
 
 const validator = require('validator');
 
@@ -278,18 +280,24 @@ router.post('/upcapa/:id',authMiddlewAdm, multer(multerConfig).single('file'), a
     try {
         const { originalname: name, key } = req.file
 
-        const urlcapa = process.env.APP_URL + '/files/' + key
+        const urlcapa = process.env.APP_URL + key
 
         dBook.findOne({where: {'id': req.params.id}}).then(async (r) => {
 
             if(r.book_capa_key){
-                fs.unlink(path.resolve(__dirname, '..','tmp','uploads', r.book_capa_key), (error) => {
-                    if(error) console.log(error);
-                })
+                if(process.env.STORAGE_TYPES == 's3'){
+                    s3.deleteObject({
+                        Bucket: 'rtcimages',
+                        Key: r.book_capa_key
+                    }).promise()
+                }else{
+                    fs.unlink(path.resolve(__dirname, '..','tmp','uploads', r.book_capa_key), (error) => {
+                        if(error) console.log(error);
+                    })
+                }
             }
             
             const updCapa = await dBook.update({
-            book_capa: name,
             book_capa_key: key,
             book_capa_url: urlcapa
             }, {where: {'id': req.params.id}})
@@ -299,7 +307,7 @@ router.post('/upcapa/:id',authMiddlewAdm, multer(multerConfig).single('file'), a
 
     } catch (error) {
         console.log(error);
-        return res.status(400);
+        return res.status(400).send({error});
     }
 
     
@@ -310,7 +318,7 @@ router.post('/upnewcapa/:id',authMiddlewAdm, multer(multerConfig).single('file')
     try {
         const { originalname: name, key } = req.file
 
-        const urlcapa = process.env.APP_URL + '/files/' + key
+        const urlcapa = process.env.APP_URL + key
 
         if(req.params.id!='new'){
             fs.unlink(path.resolve(__dirname, '..','tmp','uploads', req.params.id), (error) => {
@@ -323,7 +331,7 @@ router.post('/upnewcapa/:id',authMiddlewAdm, multer(multerConfig).single('file')
 
     } catch (error) {
         console.log(error);
-        return res.status(400);
+        return res.status(400).send({error});
     }
 
     

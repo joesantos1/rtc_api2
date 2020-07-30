@@ -39,7 +39,12 @@ const userModel = db.sequelize.define('users',{
     users_endereco: {
         type: db.Sequelize.STRING
     },
-    
+    users_foto_key: {
+        type: db.Sequelize.STRING
+    },
+    users_foto_url: {
+        type: db.Sequelize.STRING
+    }
     
 },{
   hooks: {
