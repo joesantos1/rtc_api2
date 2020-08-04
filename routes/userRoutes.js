@@ -97,7 +97,7 @@ router.get('/rtbook/:id',authMiddlew, async (req, res) => {
     const USERID = req.userId.id
     const authHeader = req.headers.authorization;
 
-    //CARREGA RT DO LIVRO ----------------->
+    //VERIFICA RTs DO LIVRO REALIZADAS PELO USUÁRIO - RTs COM RESULTADO: 1 ----------------->
 
     const verificaRT = await rTsch.findAndCountAll({
         where: { 'rts_user_id': USERID, 'rts_book_id': req.params.id, 'rts_resultado': 1 }
@@ -105,14 +105,12 @@ router.get('/rtbook/:id',authMiddlew, async (req, res) => {
 
     //VERIFICA QUAIS QUESTÕES DENTRO DO RT JÁ FORAM REALIZADAS PELO USUÁRIO
     var excluiQuestao = []
-    var excluiTotal = 0
 
     if(verificaRT){
         for(var i=0; i<=verificaRT.count-1;i++){
             excluiQuestao[i] = verificaRT.rows[i].dataValues.rts_question_id
         }
         
-        excluiTotal = verificaRT.count
     }
     
     //BUSCA INFOR DO BOOK
@@ -121,17 +119,29 @@ router.get('/rtbook/:id',authMiddlew, async (req, res) => {
     }).then(async (bki) => {
 
         //VERIFICA ULTIMA QUESTÃO REALIZADA NO RT ATUAL E TRAZ UMA QUESTÃO DIFERENTE
-        const vqr = await rTsch.findOne({where: {'rts_book_id': bki.id, 'rts_user_id': USERID}}, {order: [['id', 'DESC']]});
+        const vqr = await rTsch.findAll({
+            limit: 5,
+            where: {'rts_book_id': req.params.id, 'rts_user_id': USERID}, 
+            order: [['createdAt', 'DESC']]
+        });
 
         if(vqr){
-            excluiQuestao[excluiTotal-1] = vqr.rts_question_id
+
+            for(var i=0;i<=4;i++){
+
+                if(vqr[i]){
+                    excluiQuestao.push(vqr[i].rts_question_id)
+                }
+                
+            }
+
         }
 
         //BUSCA DADOS DA PROXIMA QUESTAO - QUESTOES APROVADAS TEM STATUS: 1
         qUest.findOne({
             where: { 
                 'questions_book_id': bki.id, 
-                'id':{[Op.not]: excluiQuestao}, 
+                [Op.not]: [{'id': excluiQuestao}], 
                 'questions_status': 1 
             }
         }).then(async qti => {
@@ -148,7 +158,7 @@ router.get('/rtbook/:id',authMiddlew, async (req, res) => {
                 rts_book_id: bki.id,
                 rts_book_titulo: bki.book_titulo,
                 rts_resultado: 0,
-                rts_user_token: authHeader
+                rts_user_token: ''
 
             }).then(() => {
 
@@ -185,8 +195,6 @@ router.get('/rtbook/:id',authMiddlew, async (req, res) => {
         console.log(error);
         return res.status(400).send({err: 'Error'})
     }
-
-    
 
 });
 
@@ -449,8 +457,6 @@ router.get('/comunity', async (req, res) => {
 router.get('/ubookcommunity/:id', authMiddlew, async (req, res) => {
     try {
 
-        const USERID = req.userId.id
-
         const BOOKID = req.params.id
 
         const SOCIAL = await sOcia.findAndCountAll({where: { 'socials_book_id': BOOKID }})
@@ -458,6 +464,9 @@ router.get('/ubookcommunity/:id', authMiddlew, async (req, res) => {
         if(!SOCIAL){
             throw res.status(400)
         }else{
+            
+            const USERID = req.userId.id
+
             const dt = []
 
             for(var i=0; i<=SOCIAL.count-1;i++ ){
@@ -548,7 +557,7 @@ router.get('/bookcommunitytopic/:id', authMiddlew, async (req, res) => {
 
         sOcia.findOne({where: {'idsocials': TOPIC }}).then(t => {
 
-            sOmsg.findAndCountAll({where: {'socials_id': TOPIC, 'socials_msgs_status': 1}}).then(async m => {
+            sOmsg.findAndCountAll({where: {'socials_id': TOPIC, 'socials_msgs_status': 1, 'socials_msgs_resp': null}}).then(async m => {
 
                 const tm = []
 
@@ -563,7 +572,9 @@ router.get('/bookcommunitytopic/:id', authMiddlew, async (req, res) => {
                         catid: md.idsocials_msgs,
                         msg: md.socials_msgs_content,
                         autor: AUTOR.users_nick,
+                        autor_foto: AUTOR.users_foto_url,
                         dataMsg: md.createdAt,
+                        respostas: await sOmsg.count({where: {'socials_msgs_resp': md.idsocials_msgs}}),
                         denuncias: await LikesCompls('complaints', 'communit_msgs', md.idsocials_msgs, 0),
                         denuncias_user: await LikesCompls('complaints', 'communit_msgs', md.idsocials_msgs, USERID),
                         likes: await LikesCompls('likes', 'communit_msgs', md.idsocials_msgs,0),
@@ -588,6 +599,50 @@ router.get('/bookcommunitytopic/:id', authMiddlew, async (req, res) => {
 
     
 })
+
+router.get('/bookcommunitresponsemsg/:id', authMiddlew, async (req, res) => {
+    try {
+
+        const USERID = req.userId.id
+        const MSG = req.params.id
+        var AUTOR, md
+
+            sOmsg.findAndCountAll({where: {'socials_msgs_resp': MSG, 'socials_msgs_status': 1}}).then(async m => {
+
+                const tm = []
+
+                for(var i = 0; i <= m.count-1; i++){
+
+                    md = m.rows[i].dataValues
+
+                    AUTOR = await dUser.findOne({where: { 'id': md.socials_msgs_iduser }})
+
+                    tm[i] = {
+                        
+                        catid: md.idsocials_msgs,
+                        msg: md.socials_msgs_content,
+                        autor: AUTOR.users_nick,
+                        autor_foto: AUTOR.users_foto_url,
+                        dataMsg: md.createdAt,
+                        denuncias: await LikesCompls('complaints', 'communit_msgs', md.idsocials_msgs, 0),
+                        denuncias_user: await LikesCompls('complaints', 'communit_msgs', md.idsocials_msgs, USERID),
+                        likes: await LikesCompls('likes', 'communit_msgs', md.idsocials_msgs,0),
+                        likes_user: await LikesCompls('likes', 'communit_msgs',md.idsocials_msgs, USERID)
+                    }
+                }
+
+                res.status(200).send({ tm })
+                return
+
+            }).catch(error => { throw error })
+
+    } catch (error) {
+        
+        console.log(error);
+        return res.status(400);
+    }
+
+});
 
 router.get('/listabooksnewrt', (req, res) => {
 
@@ -895,6 +950,36 @@ router.post('/createtopics', authMiddlew, async (req, res) => {
 })
 
 router.post('/createtopicmsg', authMiddlew, async (req, res) => {
+
+    try {
+
+        const USERID = req.userId.id
+
+        const { newmsg, topic, resp } = req.body
+
+        if(validator.isEmpty(newmsg)){
+            throw 'Mensagem não informada.'
+        }else{
+
+            sOmsg.create({
+                socials_msgs_content: newmsg,
+                socials_id: topic,
+                socials_msgs_iduser: USERID,
+                socials_msgs_resp: resp,
+                socials_msgs_status: 1
+            })
+
+            return res.status(200).send({sucess:true})
+        }
+
+    } catch (error) {
+        res.status(400)
+        console.log(error);
+        return
+    }
+})
+
+router.post('/createtopicmsgresponse', authMiddlew, async (req, res) => {
 
     try {
 
