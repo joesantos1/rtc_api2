@@ -40,7 +40,8 @@ router.get('/', async (req, res) => {
            await dBook.update({ book_total_rt: totalRt }, { where: { id: bk1.rows[i].id }})
         }
 
-        const bkAtualizado = await dBook.findAndCountAll({where: {'book_status': 1}},{
+        const bkAtualizado = await dBook.findAndCountAll({ 
+            where: {'book_status': 1},
             order: [['book_total_rt', 'DESC']]
         });
         
@@ -61,8 +62,7 @@ router.get('/', async (req, res) => {
                 }
         }
         
-        res.status(200).send({
-            ranki: await atualizaRanking(),
+        return res.status(200).send({
             lista2: regBook
         })
             
@@ -95,7 +95,6 @@ router.get('/rtbook/:id',authMiddlew, async (req, res) => {
     try {
 
     const USERID = req.userId.id
-    const authHeader = req.headers.authorization;
 
     //VERIFICA RTs DO LIVRO REALIZADAS PELO USUÁRIO - RTs COM RESULTADO: 1 ----------------->
 
@@ -104,7 +103,7 @@ router.get('/rtbook/:id',authMiddlew, async (req, res) => {
     });
 
     //VERIFICA QUAIS QUESTÕES DENTRO DO RT JÁ FORAM REALIZADAS PELO USUÁRIO
-    var excluiQuestao = []
+    var excluiQuestao = [0]
 
     if(verificaRT){
         for(var i=0; i<=verificaRT.count-1;i++){
@@ -142,12 +141,12 @@ router.get('/rtbook/:id',authMiddlew, async (req, res) => {
             where: { 
                 'questions_book_id': bki.id, 
                 [Op.not]: [{'id': excluiQuestao}], 
-                'questions_status': 1 
+                'questions_status': 1
             }
         }).then(async qti => {
 
             //BUSCA NICK DO CRIADOR DA QUESTÃO
-            const u = await dUser.findOne({where: {'id': qti.questions_creator}})
+            const uc = await dUser.findOne({where: {'id': qti.questions_creator}})
             
             rTsch.create({
 
@@ -178,7 +177,7 @@ router.get('/rtbook/:id',authMiddlew, async (req, res) => {
                         rri: qst.id,
                         qqi: qti.id,
                         resps: false,
-                        creator: u.users_nick
+                        creator: uc.users_nick
                     })
                 }).catch(function (erro) { throw 'Erro ao CARREGAR RT: ' + erro })
 
