@@ -27,8 +27,6 @@ const validator = require('validator');
 
 const router = express.Router();
 
-//TEST DE UPLOAD
-
 router.get('/app/adm/lrtq',authMiddlewAdm, async (req, res) => {
 
     try {

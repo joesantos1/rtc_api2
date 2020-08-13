@@ -16,6 +16,7 @@ app.use(cors());
 
 const rotasUser = require('./routes/userRoutes');
 const rotasAdm = require('./routes/admiRoutes');
+const rotasMail = require('./routes/mailRoutes')
 
 app.use('/files', express.static(path.resolve(__dirname, "tmp", "uploads")))
 
@@ -48,6 +49,7 @@ app.use(session({
 
 router.use('/', rotasUser);
 router.use('/', rotasAdm);
+router.use('/', rotasMail);
 
 app.use('/', router);
 

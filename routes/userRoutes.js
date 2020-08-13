@@ -19,6 +19,7 @@ const multer = require('multer');
 const multerConfig = require('../src/middlewares/multer.js');
 const aws = require('aws-sdk');
 const s3 = new aws.S3();
+const mail = require('../modules/mailconfig');
 
 const validator = require('validator');
 
@@ -252,6 +253,7 @@ router.get('/rts/:nick', async (req, res) =>{
                         rts_totalc: RTSUSER.count,
                         posRank: posicaoNoRank.pos,
                         premio: posicaoNoRank.premio,
+                        foto: USERID.users_foto_url
                     }
                 }) 
 
@@ -706,7 +708,7 @@ router.post('/cadastrouser', validaEMAIL, async (req, res) => {
         }).then(() => {
             dUser.findOne({
                 where: { 'users_nick': nick, 'users_email': email }
-            }).then(nxt => {
+            }).then(async nxt => {
 
                 //USUÁRIO LOGADO -> RETORNA DADOS DO USUÁRIO
 
@@ -721,6 +723,14 @@ router.post('/cadastrouser', validaEMAIL, async (req, res) => {
                     token: generateToken({id: nxt.id}),
                     
                 })
+
+              return await mail.sendMail({
+                    from: '"RTChamp Team" <no-reply@rtchamp.com>',
+                    to: email,
+                    subject: "Olá " + nick + ", Seja bem-vindo!",
+                    text: "",
+                    html: "Olá " + nome + ", Seja bem vindo. Testando aqui."
+                });
 
             
             }).catch(function (erro) {
