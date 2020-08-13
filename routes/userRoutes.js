@@ -695,11 +695,14 @@ router.post('/cadastrouser', validaEMAIL, async (req, res) => {
     } else {
         //const senhaHASH = await bcrypt.hash(pass, 10);
 
+        const foto = 'https://rtcimages.s3.amazonaws.com/no-foto.jpeg'
+
         dUser.create({
             users_nome: nome,
             users_email: email,
             users_pass: pass,
-            users_nick: nick
+            users_nick: nick,
+            users_foto_url: foto
         }).then(() => {
             dUser.findOne({
                 where: { 'users_nick': nick, 'users_email': email }
@@ -711,7 +714,8 @@ router.post('/cadastrouser', validaEMAIL, async (req, res) => {
                     user: {
                         nome: nome, 
                         nick: nick,
-                        email: email
+                        email: email,
+                        foto: foto
                     },
                     
                     token: generateToken({id: nxt.id}),
@@ -776,7 +780,8 @@ router.post('/userauth', async (req, res) => {
                             user: {
                                 nome: user.users_nome,
                                 nick: nick,
-                                email: user.users_email
+                                email: user.users_email,
+                                foto: user.users_foto_url
                             },
                             token: generateToken({id: user.id})
                         })
@@ -870,7 +875,7 @@ router.post('/addrt',authMiddlew, async (req, res) => {
                                         respC: true,
                                         posR: po,
                                         premio: pr,
-                                        token: token
+                                        detalhes: verResp.questions_detalhes
                                     });
                                 
                                 })
