@@ -714,24 +714,24 @@ router.post('/cadastrouser', validaEMAIL, async (req, res) => {
 
                 res.status(200).send({
                     user: {
-                        nome: nome, 
-                        nick: nick,
-                        email: email,
-                        foto: foto
+                        nome, 
+                        nick,
+                        email,
+                        foto
                     },
                     
                     token: generateToken({id: nxt.id}),
                     
                 })
 
-                let email = sejaBemVindo(nome, nick)
+                let sbv = sejaBemVindo(nome, nick)
 
               return await mail.sendMail({
                     from: '"RTChamp Team" <no-reply@rtchamp.com>',
                     to: email,
                     subject: "Olá " + nick + ", Seja bem-vindo!",
                     text: "",
-                    html: email
+                    html: sbv
                 });
 
             
