@@ -1,0 +1,5 @@
+module.exports = {
+    sejaBemVindo: (nome, nick) => {
+        return '<table style="width:100%;"> <tr> <td><img src="https://rtcimages.s3.amazonaws.com/logo3.png" alt="RTChamp - Foto Oficial"><br><i>Leia, responda, divirta-se e ganhe!</i> </td> <td style="background:#ffa800"> </td> </tr> <tr> <td><p></p></td> <td></td> </tr> <tr> <td></td> <td>Olá '+nome+', seja muito bem vindo!</td> </tr> <tr> <td><p></p></td> <td></td> </tr> <tr> <td></td> <td><b>Seu nickname (ID):</b> '+nick+'}</td> </tr> <tr> <td><p></p></td> <td></td> </tr> <tr> <td></td> <td>Escolha seu livro preferido e inicie o RT. Quanto mais rápido responder o RT, mais RTPs você pode ganhar! Acesse: <b><a href="http://www.rtchamp.com" target="_blank">RTChamp | App Web</a></b> </td> </tr> <tr> <td><p></p></td> <td></td> </tr> <tr> <td><p></p></td> <td></td> </tr> <tr> <td></td> <td><i>RTChamp Team | 2020 - Todos os direitos reservados.</i> </td> </tr> </table>'
+    }
+}

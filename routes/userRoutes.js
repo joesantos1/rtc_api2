@@ -9,10 +9,10 @@ const sOmsg = require('../models/socialMsg');
 const lIkes = require('../models/likes');
 const cOmpl = require('../models/complaints');
 
-
 const moment = require('moment');
 const { Op } = require("sequelize");
 const { atualizaRanking, tRTandTopicsBooks, validaEMAIL, dateNow, dateNow2, generateToken, LikesCompls } = require('../src/utils');
+const { sejaBemVindo } = require('../src/emails')
 const bcrypt = require('bcryptjs');
 const authMiddlew = require('../src/middlewares/auth');
 const multer = require('multer');
@@ -724,12 +724,14 @@ router.post('/cadastrouser', validaEMAIL, async (req, res) => {
                     
                 })
 
+                let email = sejaBemVindo(nome, nick)
+
               return await mail.sendMail({
                     from: '"RTChamp Team" <no-reply@rtchamp.com>',
                     to: email,
                     subject: "Olá " + nick + ", Seja bem-vindo!",
                     text: "",
-                    html: "Olá " + nome + ", Seja bem vindo. Testando aqui."
+                    html: email
                 });
 
             
