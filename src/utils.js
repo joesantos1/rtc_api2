@@ -147,7 +147,7 @@ module.exports = {
                         where: { [Op.or]: [{ 'users_nick': nick }, { 'users_email': email }] }
                     });
         
-                    if(result == null){
+                    if(!result){
                         next()
                     }
                     else if (result.users_email == email) {

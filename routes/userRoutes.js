@@ -708,24 +708,20 @@ router.post('/cadastrouser', validaEMAIL, async (req, res) => {
 
     if (validator.isEmpty(nome) || validator.isEmpty(pass)) {
         //VERIFICA CAMPOS VAZIOS - EM BRANCO
-        res.status(401).send({error})
+       throw res.status(401).send({error})
 
     } else if (!validator.isLength(pass, { min: 5 }) || !validator.isLength(nome, { min: 5 })) {
         //VERIFICA TAMANHO DE CARACTERES
         
-        res.status(401).send({error: { msg: 'Dados incorretos. Número mínimo de caracteres inválido.' }})
+       throw res.status(401).send({error: { msg: 'Dados incorretos. Número mínimo de caracteres inválido.' }})
 
     } else if (!validator.equals(pass,pass_confirm)) {
         //VERIFICA SE SENHAS CONFEREM
-        res.status(401).send({error: {msg: 'Senhas não conferem.'}})
+       throw res.status(401).send({error: {msg: 'Senhas não conferem.'}})
 
     } else {
 
-        const verifica = crypto.randomBytes(16,(err, hash) => {
-            if(err) console.log(err);
-
-            return hash.toString('hex');
-        })
+        const verifica = crypto.randomBytes(20).toString('hex')
 
         const foto = 'https://rtcimages.s3.amazonaws.com/no-foto.jpeg'
 
@@ -762,7 +758,7 @@ router.post('/cadastrouser', validaEMAIL, async (req, res) => {
               return await mail.sendMail({
                     from: '"RTChamp Team" <no-reply@rtchamp.com>',
                     to: email,
-                    subject: "Olá " + nick + ", Seja bem-vindo!",
+                    subject: "Olá " + nick + ", seja bem-vindo. Verifique sua conta.",
                     text: "",
                     html: sbv
                 });
