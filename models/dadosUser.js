@@ -44,6 +44,9 @@ const userModel = db.sequelize.define('users',{
     },
     users_foto_url: {
         type: db.Sequelize.STRING
+    },
+    users_verifica: {
+        type: db.Sequelize.STRING
     }
     
 },{

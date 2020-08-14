@@ -20,6 +20,7 @@ const multerConfig = require('../src/middlewares/multer.js');
 const aws = require('aws-sdk');
 const s3 = new aws.S3();
 const mail = require('../modules/mailconfig');
+const crypto = require('crypto')
 
 const validator = require('validator');
 
@@ -666,6 +667,30 @@ router.get('/listabooksnewrt', (req, res) => {
     })
 })
 
+router.get('/verification/:hash', authMiddlew, async (req, res) => {
+    try {
+
+        const userid = req.userId.id
+        const vhash = req.params.hash
+
+        //VERIFICA SE HASH É A MESMA DO USUÁRIO
+        dUser.findOne({where: {'id':userid, 'users_verifica': vhash}}).then(async v => {
+            if(v){
+
+                await dUser.update({'users_status': 1}, {where:{'id': userid}})
+
+                return res.status(200).send({verification:true});
+            }else{
+                return res.status(404).send({verification:false})
+            }
+        })
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(404).send({erro: 'Falha na verificação de conta.'})
+    }
+})
+
 //POST-------------------------FORMS
 
 router.post('/cadastrouser', validaEMAIL, async (req, res) => {
@@ -695,7 +720,12 @@ router.post('/cadastrouser', validaEMAIL, async (req, res) => {
         res.status(401).send({error: {msg: 'Senhas não conferem.'}})
 
     } else {
-        //const senhaHASH = await bcrypt.hash(pass, 10);
+
+        const verifica = crypto.randomBytes(16,(err, hash) => {
+            if(err) console.log(err);
+
+            return hash.toString('hex');
+        })
 
         const foto = 'https://rtcimages.s3.amazonaws.com/no-foto.jpeg'
 
@@ -704,7 +734,9 @@ router.post('/cadastrouser', validaEMAIL, async (req, res) => {
             users_email: email,
             users_pass: pass,
             users_nick: nick,
-            users_foto_url: foto
+            users_foto_url: foto,
+            users_verifica: verifica,
+            users_status: 2
         }).then(() => {
             dUser.findOne({
                 where: { 'users_nick': nick, 'users_email': email }
@@ -717,14 +749,15 @@ router.post('/cadastrouser', validaEMAIL, async (req, res) => {
                         nome, 
                         nick,
                         email,
-                        foto
+                        foto,
+                        status: 2
                     },
                     
                     token: generateToken({id: nxt.id}),
                     
                 })
 
-                let sbv = sejaBemVindo(nome, nick)
+                let sbv = sejaBemVindo(nome, nick, verifica)
 
               return await mail.sendMail({
                     from: '"RTChamp Team" <no-reply@rtchamp.com>',
@@ -793,7 +826,8 @@ router.post('/userauth', async (req, res) => {
                                 nome: user.users_nome,
                                 nick: nick,
                                 email: user.users_email,
-                                foto: user.users_foto_url
+                                foto: user.users_foto_url,
+                                status: user.users_status
                             },
                             token: generateToken({id: user.id})
                         })
