@@ -332,7 +332,7 @@ router.get('/userpainel', authMiddlew, async (req, res) => {
 
                 //BUSCA POSIÇÃO NO RANKING ATUALIZADA
                 const RANKATUALIZADO = await atualizaRanking()
-                const posicaoNoRank = RANKATUALIZADO.find(t => t.nick === USERID.users_nick);
+                const posicaoNoRank = RANKATUALIZADO.find(t => t.nick === USERID.users_nick) == undefined ? {pos: '(-)', premio: 0} : RANKATUALIZADO.find(t => t.nick === USERID.users_nick);
 
                 res.status(200).send({
                     TOTALRTS: {
@@ -710,9 +710,9 @@ router.get('/verification/:hash', authMiddlew, async (req, res) => {
                 await dUser.update({'users_status': 1}, {where:{'id': userid}})
 
                 //ATUALIZAÇÃO TABLE REFERRELS E FAZ REGISTRO DE RTP GANHO POR INDICAÇÃO
-                const verificaRefs = await dRefs.findAll({where: {'refs_user': v.users_nick, 'refs_ref': v.users_refs}})
+                const verificaRefs = await dRefs.findOne({where: {'refs_user': v.users_nick, 'refs_ref': v.users_refs}})
 
-                if(!verificaRefs){
+                if(verificaRefs==undefined){
                     await dRefs.create({
                         'refs_user': v.users_nick,
                         'refs_ref': v.users_refs
@@ -787,7 +787,7 @@ router.post('/cadastrouser', validaEMAIL, async (req, res) => {
 
         const verifica = crypto.randomBytes(20).toString('hex')
 
-        const foto = 'https://rtcimages.s3.amazonaws.com/no-foto.jpeg'
+        const foto = 'https://rtcimages.s3.amazonaws.com/no-foto.svg'
 
         dUser.create({
             users_nome: nome,
