@@ -34,7 +34,8 @@ module.exports = {
         try {
             const result = await dUser.findAll({
                 where: {'users_rtp': {[Op.gt]: 0}},
-                order: [['users_rtp', 'DESC']]
+                order: [['users_rtp', 'DESC']],
+                limit: 100
             })
 
             var foto = ''
@@ -66,10 +67,10 @@ module.exports = {
                     if(du.users_foto_url){
                         foto = du.users_foto_url
                     }else{
-                        foto = process.env.APP_URL + 'no-foto.jpeg'
+                        foto = process.env.APP_URL + 'no-foto.svg'
                     }
                 }else{
-                    foto = process.env.APP_URL + 'no-foto.jpeg'
+                    foto = process.env.APP_URL + 'no-foto.svg'
                 }
 
                 RANK[i] = {

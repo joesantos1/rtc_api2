@@ -47,6 +47,12 @@ const userModel = db.sequelize.define('users',{
     },
     users_verifica: {
         type: db.Sequelize.STRING
+    },
+    users_refs_id: {
+        type: db.Sequelize.STRING
+    },
+    users_refs: {
+        type: db.Sequelize.STRING
     }
     
 },{

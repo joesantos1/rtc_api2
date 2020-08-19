@@ -8,6 +8,7 @@ const sOcia = require('../models/social');
 const sOmsg = require('../models/socialMsg');
 const lIkes = require('../models/likes');
 const cOmpl = require('../models/complaints');
+const dRefs = require('../models/dadosRefs');
 
 const moment = require('moment');
 const { Op } = require("sequelize");
@@ -254,7 +255,8 @@ router.get('/rts/:nick', async (req, res) =>{
                         rts_totalc: RTSUSER.count,
                         posRank: posicaoNoRank.pos,
                         premio: posicaoNoRank.premio,
-                        foto: USERID.users_foto_url
+                        foto: USERID.users_foto_url,
+                        status: USERID.users_status
                     }
                 }) 
 
@@ -341,6 +343,7 @@ router.get('/userpainel', authMiddlew, async (req, res) => {
                         rts_total: RTSUSER.count,
                         posRank: posicaoNoRank.pos,
                         premio: posicaoNoRank.premio,
+                        status: USERID.users_status
                     }
                 }) 
 
@@ -406,6 +409,33 @@ router.get('/userpainelquestions', authMiddlew, async (req, res) => {
         res.status(400).send({error})
         console.log(error);
         
+    }
+})
+
+router.get('/userpainelrefs/:nick', authMiddlew, async (req, res) => {
+    try {
+
+        const userNick = req.params.nick
+
+        const totalRefs = await dRefs.findAndCountAll({where: {'refs_ref': userNick}})
+
+        if(totalRefs){
+
+            var tr = []
+            for(var i=0;i<=totalRefs.count-1;i++){
+                tr[i] = {
+                    nick: totalRefs.rows[i].dataValues.refs_user,
+                    data: totalRefs.rows[i].dataValues.createdAt
+                } 
+            }
+            return res.status(200).send({tr})
+        }else{
+            throw 'não encontrado.'
+        }
+        
+    } catch (error) {
+        console.log(error);
+        res.status(404).send({e: 'Não encontrado.'})
     }
 })
 
@@ -674,10 +704,29 @@ router.get('/verification/:hash', authMiddlew, async (req, res) => {
         const vhash = req.params.hash
 
         //VERIFICA SE HASH É A MESMA DO USUÁRIO
-        dUser.findOne({where: {'id':userid, 'users_verifica': vhash}}).then(async v => {
+        dUser.findOne({where: {'id':userid, 'users_verifica': vhash, 'users_status': 2}}).then(async v => {
             if(v){
-
+                //ATUALIZA STATUS DO USUÁRIO
                 await dUser.update({'users_status': 1}, {where:{'id': userid}})
+
+                //ATUALIZAÇÃO TABLE REFERRELS E FAZ REGISTRO DE RTP GANHO POR INDICAÇÃO
+                const verificaRefs = await dRefs.findAll({where: {'refs_user': v.users_nick, 'refs_ref': v.users_refs}})
+
+                if(!verificaRefs){
+                    await dRefs.create({
+                        'refs_user': v.users_nick,
+                        'refs_ref': v.users_refs
+                    })
+
+                    //BUSCA DADOS DO INDICADOR PARA SOMAR OS RTPS GANHOS PELA INDICAÇÃO
+                    const verificaRef = await dUser.findOne({where: {'users_nick': v.users_refs}});
+
+                    if(verificaRef){
+                        var addRtp = parseInt(verificaRef.users_rtp) + 20
+
+                        await dUser.update({'users_rtp': addRtp}, {where: {'id': verificaRef.id}})
+                    }
+                }
 
                 return res.status(200).send({verification:true});
             }else{
@@ -686,8 +735,23 @@ router.get('/verification/:hash', authMiddlew, async (req, res) => {
         })
         
     } catch (error) {
-        console.log(error);
+        console.log('===================>>>' + error);
         return res.status(404).send({erro: 'Falha na verificação de conta.'})
+    }
+})
+
+router.get('/userrefs/:nick', (req, res) => {
+    try {
+
+        if(req.params.nick){
+            dUser.findOne({where: {'users_nick': req.params.nick}}).then(v => {
+                return res.status(200).send({nome: v.users_nome})
+            })
+        }
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(404).send({err: 'Não econtrado.'})
     }
 })
 
@@ -697,7 +761,7 @@ router.post('/cadastrouser', validaEMAIL, async (req, res) => {
 
     try {
 
-        const { nome, nick, email, pass, pass_confirm } = req.body;
+        const { nome, nick, email, pass, pass_confirm, refs} = req.body;
 
     //VERIFICA CAMPOS VAZIOS
     var error = { error: {  
@@ -732,7 +796,8 @@ router.post('/cadastrouser', validaEMAIL, async (req, res) => {
             users_nick: nick,
             users_foto_url: foto,
             users_verifica: verifica,
-            users_status: 2
+            users_status: 2,
+            users_refs: refs
         }).then(() => {
             dUser.findOne({
                 where: { 'users_nick': nick, 'users_email': email }
