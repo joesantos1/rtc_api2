@@ -22,7 +22,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 
 //CORS CONFIG
-var allowlist = ['http://localhost:8080', 'http://www.rtchamp.com', 'http://adm.rtchamp.com']
+var allowlist = ['http://localhost:8080', 'http://rtchamp.com', 'http://adm.rtchamp.com']
 var corsOptionsDelegate = function (req, callback) {
   var corsOptions;
   if (allowlist.indexOf(req.header('Origin')) !== -1) {
