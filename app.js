@@ -8,19 +8,7 @@ const path = require('path')
 
 const app = express();
 
-//CORS CONFIG
-var allowlist = ['http://localhost:8080', 'http://rtchamp.com', 'http://adm.rtchamp.com']
-var corsOptionsDelegate = function (req, callback) {
-  var corsOptions;
-  if (allowlist.indexOf(req.header('Origin')) !== -1) {
-    corsOptions = { origin: true } // reflect (enable) the requested origin in the CORS response
-  } else {
-    corsOptions = { origin: false } // disable CORS for this request
-  }
-  callback(null, corsOptions) // callback expects two parameters: error and options
-}
-
-app.use(cors(corsOptionsDelegate));
+app.use(cors({origin: ["http://rtchamp.com", /\.rtchamp\.com$/, "http://localhost:8080"]}));
 
 //REDIRECT UMBLER
 app.use((req, res, next) => { //Cria um middleware onde todas as requests passam por ele 
