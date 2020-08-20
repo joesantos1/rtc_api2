@@ -20,12 +20,27 @@ const router = express.Router()
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
-app.use(cors({origin: ['http://localhost:8080','http://www.rtchamp.com','http://adm.rtchamp.com']}));
 
+//CORS CONFIG
+var allowlist = ['http://localhost:8080', 'http://www.rtchamp.com', 'http://adm.rtchamp.com']
+var corsOptionsDelegate = function (req, callback) {
+  var corsOptions;
+  if (allowlist.indexOf(req.header('Origin')) !== -1) {
+    corsOptions = { origin: true } // reflect (enable) the requested origin in the CORS response
+  } else {
+    corsOptions = { origin: false } // disable CORS for this request
+  }
+  callback(null, corsOptions) // callback expects two parameters: error and options
+}
+
+app.use(cors(corsOptionsDelegate));
+
+//CHAMADA DE ROTAS
 const rotasUser = require('./routes/userRoutes');
 const rotasAdm = require('./routes/admiRoutes');
 const rotasMail = require('./routes/mailRoutes')
 
+//UPLOAD TEMPORARIOS
 app.use('/files', express.static(path.resolve(__dirname, "tmp", "uploads")))
 
 //CONFIGURAÇÕES DE SESSAO
