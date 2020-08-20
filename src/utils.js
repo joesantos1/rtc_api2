@@ -149,15 +149,12 @@ module.exports = {
                     });
         
                     if(!result){
-                        console.log('===============>>> NÃO ENCONTRADO');
                         return next()
                     }
                     if (result.users_email == email) {
-                        console.log('EMAIL IGUAAAAAAAAAAAAAAAAAAAAAAL');
                         throw {msg: 'Email já em uso.'}
                     }
                     if (result.users_nick == nick) {
-                        console.log('NICK IGUAAAAAAAAAAAAAAAAAAAAAAAAAL');
                         throw {msg: 'Nick já em uso.'}
                     }
                     

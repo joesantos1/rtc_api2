@@ -9,6 +9,9 @@ const RankingP = db.sequelize.define('users',{
     },
     users_foto_url: {
         type: db.Sequelize.STRING
+    },
+    users_email: {
+        type: db.Sequelize.STRING
     }
 });
 
