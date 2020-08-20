@@ -8,8 +8,15 @@ const path = require('path')
 
 const app = express();
 
+var whitelist = ["http://rtchamp.com", /\.rtchamp\.com$/, "http://localhost:8080"]
 var CorsOptions = {
-  origin: ["http://rtchamp.com", /\.rtchamp\.com$/, "http://localhost:8080"]
+  origin: function(origin, cb){
+    if(whitelist.indexOf(origin) !== -1){
+      cb(null, true)
+    }else{
+      cb(new Error('Not allowed by CORS'))
+    }
+  }
 }
 
 app.use(cors(CorsOptions));
