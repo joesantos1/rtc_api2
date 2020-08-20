@@ -761,27 +761,27 @@ router.post('/cadastrouser', validaEMAIL, async (req, res) => {
 
     try {
 
-        const { nome, nick, email, pass, pass_confirm, refs} = req.body;
+        const { nome, nick, email, pass, pass_confirm, refs, termos} = req.body;
 
     //VERIFICA CAMPOS VAZIOS
-    var error = { error: {  
+    var error = {  
             msg: 'Por favor, digite seu nome completo.',
             msg: 'Por favor, digite uma senha.' 
             }
-        }
+        
 
     if (validator.isEmpty(nome) || validator.isEmpty(pass)) {
         //VERIFICA CAMPOS VAZIOS - EM BRANCO
-       throw res.status(401).send({error})
+       throw {error}
 
     } else if (!validator.isLength(pass, { min: 5 }) || !validator.isLength(nome, { min: 5 })) {
         //VERIFICA TAMANHO DE CARACTERES
         
-       throw res.status(401).send({error: { msg: 'Dados incorretos. Número mínimo de caracteres inválido.' }})
+       throw { msg: 'Dados incorretos. Número mínimo de caracteres inválido.' }
 
     } else if (!validator.equals(pass,pass_confirm)) {
         //VERIFICA SE SENHAS CONFEREM
-       throw res.status(401).send({error: {msg: 'Senhas não conferem.'}})
+       throw {msg: 'Senhas não conferem.'}
 
     } else {
 
@@ -797,7 +797,8 @@ router.post('/cadastrouser', validaEMAIL, async (req, res) => {
             users_foto_url: foto,
             users_verifica: verifica,
             users_status: 2,
-            users_refs: refs
+            users_refs: refs,
+            users_termos: termos
         }).then(() => {
             dUser.findOne({
                 where: { 'users_nick': nick, 'users_email': email }
@@ -818,6 +819,8 @@ router.post('/cadastrouser', validaEMAIL, async (req, res) => {
                     
                 })
 
+                //ENVIA EMAIL DE BOAS VINDAS E LINK PARA VERIFICAÇÃO DA CONTA
+
                 let sbv = sejaBemVindo(nome, nick, verifica)
 
               return await mail.sendMail({
@@ -828,18 +831,13 @@ router.post('/cadastrouser', validaEMAIL, async (req, res) => {
                     html: sbv
                 });
 
-            
-            }).catch(function (erro) {
-                console.log('Erro ao buscar USUÁRIO: ' + erro)
             })
-        }).catch(function (erro) {
-            console.log('Erro ao CADASTRAR usuário: ' + erro)
         })
     }
         
     } catch (error) {
-        console.log('ERRO AO CADASTRAR USUÁRIO: ' + error);
-        res.status(400).send({error})
+        console.log(error);
+        res.status(400).send(error.msg)
     }
 
     

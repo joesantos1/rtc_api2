@@ -149,17 +149,20 @@ module.exports = {
                     });
         
                     if(!result){
-                        next()
+                        console.log('===============>>> NÃO ENCONTRADO');
+                        return next()
                     }
-                    else if (result.users_email == email) {
+                    if (result.users_email == email) {
+                        console.log('EMAIL IGUAAAAAAAAAAAAAAAAAAAAAAL');
                         throw {msg: 'Email já em uso.'}
                     }
-                    else if (result.users_nick == nick) {
+                    if (result.users_nick == nick) {
+                        console.log('NICK IGUAAAAAAAAAAAAAAAAAAAAAAAAAL');
                         throw {msg: 'Nick já em uso.'}
                     }
-                    else {
-                        next()
-                    }
+                    
+                    next()
+                    
                 
                 }else{
                     throw {msg: 'Por favor, digite um email válido.'}
@@ -170,7 +173,7 @@ module.exports = {
     
         } catch (error) {
             res.status(400).send({error})
-            console.log('ERRO AQUI: ' + error.msg)
+            console.log(error)
             return
         }
     },

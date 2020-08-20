@@ -53,6 +53,9 @@ const userModel = db.sequelize.define('users',{
     },
     users_refs: {
         type: db.Sequelize.STRING
+    },
+    users_termos: {
+        type: db.Sequelize.INTEGER
     }
     
 },{
