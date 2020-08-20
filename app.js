@@ -8,7 +8,11 @@ const path = require('path')
 
 const app = express();
 
-app.use(cors({origin: ["http://rtchamp.com", /\.rtchamp\.com$/, "http://localhost:8080"]}));
+var CorsOptions = {
+  origin: ["http://rtchamp.com", /\.rtchamp\.com$/, "http://localhost:8080"]
+}
+
+app.use(cors(CorsOptions));
 
 //REDIRECT UMBLER
 app.use((req, res, next) => { //Cria um middleware onde todas as requests passam por ele 
