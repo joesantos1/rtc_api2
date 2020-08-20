@@ -8,19 +8,6 @@ const path = require('path')
 
 const app = express();
 
-//REDIRECT UMBLER
-app.use((req, res, next) => { //Cria um middleware onde todas as requests passam por ele 
-    if ((req.headers["x-forwarded-proto"] || "").endsWith("http")) //Checa se o protocolo informado nos headers é HTTP 
-        res.redirect(`https://${req.headers.host}${req.url}`); //Redireciona pra HTTPS 
-    else //Se a requisição já é HTTPS 
-        next(); //Não precisa redirecionar, passa para os próximos middlewares que servirão com o conteúdo desejado 
-});
-
-const router = express.Router()
-
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: false}));
-
 //CORS CONFIG
 var allowlist = ['http://localhost:8080', 'http://rtchamp.com', 'http://adm.rtchamp.com']
 var corsOptionsDelegate = function (req, callback) {
@@ -34,6 +21,19 @@ var corsOptionsDelegate = function (req, callback) {
 }
 
 app.use(cors(corsOptionsDelegate));
+
+//REDIRECT UMBLER
+app.use((req, res, next) => { //Cria um middleware onde todas as requests passam por ele 
+    if ((req.headers["x-forwarded-proto"] || "").endsWith("http")) //Checa se o protocolo informado nos headers é HTTP 
+        res.redirect(`https://${req.headers.host}${req.url}`); //Redireciona pra HTTPS 
+    else //Se a requisição já é HTTPS 
+        next(); //Não precisa redirecionar, passa para os próximos middlewares que servirão com o conteúdo desejado 
+});
+
+const router = express.Router()
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: false}));
 
 //CHAMADA DE ROTAS
 const rotasUser = require('./routes/userRoutes');
