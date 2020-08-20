@@ -20,7 +20,7 @@ const router = express.Router()
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
-app.use(cors({origin: 'http://localhost:8080' || 'http://www.rtchamp.com' || 'http://adm.rtchamp.com'}));
+app.use(cors({origin: ['http://localhost:8080','http://www.rtchamp.com','http://adm.rtchamp.com']}));
 
 const rotasUser = require('./routes/userRoutes');
 const rotasAdm = require('./routes/admiRoutes');
