@@ -8,7 +8,15 @@ const path = require('path')
 
 const app = express();
 
-var whitelist = ["https://rtchamp.com", /\.rtchamp\.com$/, "http://localhost:8080"]
+//REDIRECT UMBLER
+app.use((req, res, next) => { //Cria um middleware onde todas as requests passam por ele 
+    if ((req.headers["x-forwarded-proto"] || "").endsWith("http")) //Checa se o protocolo informado nos headers é HTTP 
+        res.redirect(`https://${req.headers.host}${req.url}`); //Redireciona pra HTTPS 
+    else //Se a requisição já é HTTPS 
+        next(); //Não precisa redirecionar, passa para os próximos middlewares que servirão com o conteúdo desejado 
+});
+
+var whitelist = ["https://rtchamp.com", "https://adm.rtchamp.com", "http://localhost:8080"]
 var CorsOptions = {
   origin: function(origin, cb){
     if(whitelist.indexOf(origin) !== -1){
@@ -20,14 +28,6 @@ var CorsOptions = {
 }
 
 app.use(cors(CorsOptions));
-
-//REDIRECT UMBLER
-app.use((req, res, next) => { //Cria um middleware onde todas as requests passam por ele 
-    if ((req.headers["x-forwarded-proto"] || "").endsWith("http")) //Checa se o protocolo informado nos headers é HTTP 
-        res.redirect(`https://${req.headers.host}${req.url}`); //Redireciona pra HTTPS 
-    else //Se a requisição já é HTTPS 
-        next(); //Não precisa redirecionar, passa para os próximos middlewares que servirão com o conteúdo desejado 
-});
 
 const router = express.Router()
 
