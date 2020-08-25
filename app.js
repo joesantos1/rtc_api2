@@ -16,7 +16,7 @@ app.use((req, res, next) => { //Cria um middleware onde todas as requests passam
         next(); //Não precisa redirecionar, passa para os próximos middlewares que servirão com o conteúdo desejado 
 });
 
-var whitelist = ["https://rtchamp.com", "https://adm.rtchamp.com", "http://localhost:8080"]
+var whitelist = ["https://rtchamp.com", "https://adm.rtchamp.com", "http://localhost:8080", "https://www.rtchamp.com"]
 var CorsOptions = {
   origin: function(origin, cb){
     if(whitelist.indexOf(origin) !== -1){
