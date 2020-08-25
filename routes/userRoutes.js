@@ -13,7 +13,7 @@ const dRefs = require('../models/dadosRefs');
 const moment = require('moment');
 const { Op } = require("sequelize");
 const { atualizaRanking, tRTandTopicsBooks, validaEMAIL, dateNow, dateNow2, generateToken, LikesCompls } = require('../src/utils');
-const { sejaBemVindo } = require('../src/emails')
+const { sejaBemVindo, recuperaSenha } = require('../src/emails')
 const bcrypt = require('bcryptjs');
 const authMiddlew = require('../src/middlewares/auth');
 const multer = require('multer');
@@ -1321,7 +1321,75 @@ router.post('/upfotouser', authMiddlew, multer(multerConfig).single('file'), asy
     }
 })
 
+router.post('/recuperapassuser', async (req, res) => {
+    try {
+
+        const email = req.body.email
+
+        if(validator.isEmail(email)){
+
+            const userid = await dUser.findOne({where: {'users_email': email}})
+
+            if(userid){
+               const gera = generateToken2({id: userid.id})
+
+               var mm = recuperaSenha(userid.users_nome, userid.users_nick, gera)
+
+               await mail.sendMail({
+                    from: '"RTChamp Team" <no-reply@rtchamp.com>',
+                    to: email,
+                    subject: "Redefinir minha senha.",
+                    text: "",
+                    html: mm
+                });
+
+                return res.status(200).send({sucess:true});
+
+            }
+
+        }else{
+            throw 'Por favor, digite um email válido.'
+        }
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(400).send({error})
+    }
+})
+
+
+
 //PUT ----------------------FORMS
+
+const authMiddlew2 = require('../src/middlewares/auth2')
+router.put('/newpassuser',authMiddlew2, async (req, res) => {
+
+    try {
+
+        const pass = req.body.pass
+        const userid = req.userId.id
+
+        const user = await dUser.findOne({where: {'id': userid}})
+
+        if(user){
+
+            const salt = await bcrypt.genSalt(10)
+         
+            const hash = await bcrypt.hash(pass, salt)
+
+            dUser.update({users_pass: hash}, {where: {'id': userid}})
+            .then(() => {
+                return res.status(200).send({sucess:true})
+            })
+
+        }
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(400).send({error})
+    }
+
+})
 
 router.put('/updateuserpass', authMiddlew, async (req, res) => {
     try {

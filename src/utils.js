@@ -177,6 +177,9 @@ module.exports = {
     generateToken: (params = {}) => {
        return JWT.sign({id: params}, AUTH.SECRET, {expiresIn: 86400} )
     },
+    generateToken2: (params = {}) => {
+        return JWT.sign({id: params}, process.env.SECRET2, {expiresIn: 86400} )
+     },
     generateTokenAdm: (params = {}) => {
         return JWT.sign({id: params}, AUTH.SECRET_ADM, {expiresIn: 86400} )
      },
