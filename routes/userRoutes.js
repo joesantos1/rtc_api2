@@ -12,7 +12,7 @@ const dRefs = require('../models/dadosRefs');
 
 const moment = require('moment');
 const { Op } = require("sequelize");
-const { atualizaRanking, tRTandTopicsBooks, validaEMAIL, dateNow, dateNow2, generateToken, LikesCompls } = require('../src/utils');
+const { atualizaRanking, tRTandTopicsBooks, validaEMAIL, dateNow, dateNow2, generateToken, generateToken2, LikesCompls } = require('../src/utils');
 const { sejaBemVindo, recuperaSenha } = require('../src/emails')
 const bcrypt = require('bcryptjs');
 const authMiddlew = require('../src/middlewares/auth');
