@@ -1345,6 +1345,8 @@ router.post('/recuperapassuser', async (req, res) => {
 
                 return res.status(200).send({sucess:true});
 
+            }else{
+                throw 'Usuário não encontrado. Por favor, verifique o email informado.'
             }
 
         }else{
@@ -1356,8 +1358,6 @@ router.post('/recuperapassuser', async (req, res) => {
         return res.status(400).send({error})
     }
 })
-
-
 
 //PUT ----------------------FORMS
 
