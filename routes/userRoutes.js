@@ -1500,7 +1500,7 @@ router.post('/contato', async (req, res) => {
                 to: 'contato@rtchamp.com',
                 subject: `${nome} - Contato via App`,
                 text: ``,
-                html: `Olá, meu nome é ${nome},<br>Meu telefone e whatsapp: ${tel1}<br><br>${msg}`
+                html: `Nome: ${nome},<br>Telefone e whatsapp: ${tel1}<br>Email: ${email}<br><br>${msg}`
             });
 
             return res.status(200).send({sucess: true})
