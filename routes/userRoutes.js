@@ -1496,9 +1496,9 @@ router.post('/contato', async (req, res) => {
 
         if(validator.isEmail(email)){
             await mail.sendMail({
-                from: `"${nome}" <${email}>`,
+                from: `"${nome}" <no-reply@rtchamp.com>`,
                 to: 'contato@rtchamp.com',
-                subject: "Novo contato via Pag. de Contato",
+                subject: `${nome} - Contato via App`,
                 text: ``,
                 html: `Olá, meu nome é ${nome},<br>Meu telefone e whatsapp: ${tel1}<br><br>${msg}`
             });
