@@ -145,12 +145,16 @@ router.get('/rtbook/:id',authMiddlew, async (req, res) => {
 
         }
 
-        //BUSCA DADOS DA PROXIMA QUESTAO - QUESTOES APROVADAS TEM STATUS: 1
+        //BUSCA DADOS DA PROXIMA QUESTAO - QUESTOES APROVADAS TEM STATUS: 1 - NÃO BUSCA QUESTÕES CRIADAS PELO USUÁRIO QUE FAZ O RT
+        
         qUest.findOne({
             where: { 
                 'questions_book_id': bki.id, 
-                [Op.not]: [{'id': excluiQuestao}], 
-                [Op.not]: [{'questions_creator': USERID}], 
+                [Op.not]: [{'id': excluiQuestao},{
+                    'questions_creator': {
+                        [Op.not]: USERID
+                    }
+                }], 
                 'questions_status': 1
             }
         }).then(async qti => {
