@@ -9,6 +9,8 @@ const sOmsg = require('../models/socialMsg');
 const lIkes = require('../models/likes');
 const cOmpl = require('../models/complaints');
 const dRefs = require('../models/dadosRefs');
+const rEque = require('../models/requests');
+const dBank = require('../models/data_banks')
 
 const moment = require('moment');
 const { Op } = require("sequelize");
@@ -16,6 +18,7 @@ const { atualizaRanking, tRTandTopicsBooks, validaEMAIL, dateNow, dateNow2, gene
 const { sejaBemVindo, recuperaSenha } = require('../src/emails')
 const bcrypt = require('bcryptjs');
 const authMiddlew = require('../src/middlewares/auth');
+const authMiddlew2 = require('../src/middlewares/auth2');
 const multer = require('multer');
 const multerConfig = require('../src/middlewares/multer.js');
 const aws = require('aws-sdk');
@@ -102,7 +105,10 @@ router.get('/rtbook/:id',authMiddlew, async (req, res) => {
     //VERIFICA RTs DO LIVRO REALIZADAS PELO USUÁRIO - RTs COM RESULTADO: 1 ----------------->
 
     const verificaRT = await rTsch.findAndCountAll({
-        where: { 'rts_user_id': USERID, 'rts_book_id': req.params.id, 'rts_resultado': 1 }
+        where: { 
+            'rts_user_id': USERID, 
+            'rts_book_id': req.params.id, 
+            'rts_resultado': 1 }
     });
 
     //VERIFICA QUAIS QUESTÕES DENTRO DO RT JÁ FORAM REALIZADAS PELO USUÁRIO
@@ -144,6 +150,7 @@ router.get('/rtbook/:id',authMiddlew, async (req, res) => {
             where: { 
                 'questions_book_id': bki.id, 
                 [Op.not]: [{'id': excluiQuestao}], 
+                [Op.not]: [{'questions_creator': USERID}], 
                 'questions_status': 1
             }
         }).then(async qti => {
@@ -308,7 +315,7 @@ router.get('/userpainel', authMiddlew, async (req, res) => {
 
         if(USERID){
 
-            const RTSUSER = await rTsch.findAndCountAll({where: { 'rts_user_id': USERID.id }});
+            const RTSUSER = await rTsch.findAndCountAll({where: { 'rts_user_id': USERID.id }, order: [['id', 'DESC']]});
 
             if(RTSUSER){
 
@@ -740,7 +747,7 @@ router.get('/verification/:hash', authMiddlew, async (req, res) => {
     }
 })
 
-router.get('/userrefs/:nick', (req, res) => {
+router.get('/userrefs/:nick', async (req, res) => {
     try {
 
         if(req.params.nick){
@@ -752,6 +759,49 @@ router.get('/userrefs/:nick', (req, res) => {
     } catch (error) {
         console.log(error);
         return res.status(404).send({err: 'Não econtrado.'})
+    }
+})
+
+router.get('/requests', authMiddlew, async (req, res) => {
+    try {
+
+        const userid = req.userId.id
+
+        const user = await dUser.findOne({where: {'id': userid}})
+
+        if(user){
+            //BUSCA TODAS AS SOLICITAÇÕES FEITAS PELO USUÁRIO
+            const reques = await rEque.findAndCountAll({where: {'requests_userid': userid}, order: [['idrequests', 'DESC']]})
+            const dbanks = await dBank.findAll({where:{'bank_user_id': userid}})
+
+            var lista = []
+
+            if(reques){
+
+                for(var i=0;i<=reques.count-1;i++){
+                    var r = reques.rows[i].dataValues
+                    lista[i] = {
+                        data: r.createdAt,
+                        data_upd: r.updatedAt,
+                        premio: r.requests_premio,
+                        status: r.requests_status,
+                        bank: r.requests_data_bankname,
+                    }
+                }
+                
+            }
+            
+            res.status(200).send({
+                    rtp: user.users_rtp_total,
+                    premios: user.users_premios,
+                    lista,
+                    dbanks
+                })
+        }
+
+    } catch (error) {
+        console.log(error);
+        return res.status(400).send({e: 'Erro no carregamento de solicitações.'})
     }
 })
 
@@ -1359,9 +1409,84 @@ router.post('/recuperapassuser', async (req, res) => {
     }
 })
 
+router.post('/newrequests', authMiddlew, async (req, res) => {
+    try {
+
+        const userid = req.userId.id
+
+        const user = await dUser.findOne({where: {'id': userid}})
+
+        if(user){
+
+            const { bank_titular,
+                bank_name,
+                bank_cpf,
+                bank_code,
+                bank_agency,
+                bank_account_number,
+                valor_premio,
+                bank_type } = req.body
+
+            //CRIA NOVO REGISTRO DE DADOS BANCÁRIOS CASO O USER TENHA ESCOLHIDO (*) + NOVA CONTA BANCÁRIA
+            var idbank;
+                if(bank_type==0){
+                    const newbank = await dBank.create({
+                        bank_user_id: userid,
+                        bank_titular,
+                        bank_name,
+                        bank_cpf,
+                        bank_code,
+                        bank_agency,
+                        bank_account_number,
+                        data_bank_type: 'banco'
+                    })
+
+                    if(newbank) idbank = newbank.id
+                }else{
+
+                    //SE NÃO FOR NOVA CONTA - ATUALIZA A CONTA JÁ EXISTENTE
+                    idbank = bank_type
+
+                    const updbank = await dBank.update({
+                        bank_user_id: userid,
+                        bank_titular,
+                        bank_name,
+                        bank_cpf,
+                        bank_code,
+                        bank_agency,
+                        bank_account_number,
+                        data_bank_type: 'banco'
+                    }, {where: {'iddata_banks': idbank}})
+                }
+        
+                //CRIA NOVO REGISTRO DE SOLICITAÇÃO
+                rEque.create({
+                    requests_userid: userid,
+                    requests_data_bankname: bank_name,
+                    requests_data_bankid: idbank,
+                    requests_premio: parseFloat(valor_premio),
+                    requests_status: 2
+                }).then(async () => {
+                    //DESCONTA E ATUALIZA VALOR DE PREMIO DISPONIVEL DO USUÁRIO
+                    var premiototal = parseFloat(user.users_premios) - parseFloat(valor_premio)
+                    const apremiouser = await dUser.update({users_premios: premiototal}, {where: {'id': userid}})
+
+                    if(apremiouser){
+                        return res.status(200).send({sucess:true})
+                    }
+                })
+            
+
+        }
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(400).send({error})
+    }
+})
+
 //PUT ----------------------FORMS
 
-const authMiddlew2 = require('../src/middlewares/auth2')
 router.put('/newpassuser',authMiddlew2, async (req, res) => {
 
     try {
