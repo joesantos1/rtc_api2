@@ -1489,6 +1489,30 @@ router.post('/newrequests', authMiddlew, async (req, res) => {
     }
 })
 
+router.post('/contato', async (req, res) => {
+    try {
+
+        const { email, nome, msg, tel1 } = req.body
+
+        if(validator.isEmail(email)){
+            await mail.sendMail({
+                from: `"${nome}" <${email}>`,
+                to: 'contato@rtchamp.com',
+                subject: "Novo contato via Pag. de Contato",
+                text: ``,
+                html: `Olá, meu nome é ${nome},<br>Meu telefone e whatsapp: ${tel1}<br><br>${msg}`
+            });
+
+            return res.status(200).send({sucess: true})
+        }else{
+            throw 'Email inválido.'
+        }
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(400).send({error})
+    }
+})
 //PUT ----------------------FORMS
 
 router.put('/newpassuser',authMiddlew2, async (req, res) => {
