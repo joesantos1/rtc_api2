@@ -91,7 +91,7 @@ module.exports = {
     tRTandTopicsBooks: async (tb,totalb, idb) => {
 
         if(tb=='rts'){
-            for (i = 0; i <= totalb-1; i++) {
+            for (var i = 0; i <= totalb-1; i++) {
 
                 const rss = await rTsch.count({ where: { 'rts_book_id': idb } })
                     

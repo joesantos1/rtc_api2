@@ -85,10 +85,12 @@ router.get('/bookinfor/:id', async (req, res) => {
    dBook.findOne({
         where: { 'id': req.params.id }
     }).then(async bki => {
+        var totalRt = await tRTandTopicsBooks('rts',1,req.params.id)
         res.status(200).send({
             
             lista2: bki,
-            TOPO: false
+            TOPO: false,
+            totalRt
         })
     }).catch(function (erro) {
         console.log('Erro ao carregar o livro: ' + erro)
@@ -466,6 +468,7 @@ router.get('/comunity', async (req, res) => {
         }
 
         const bkAtualizado = await dBook.findAndCountAll({
+            where: {'book_status': 1},
             order: [['book_total_topic', 'DESC']]
         });
         
@@ -486,9 +489,9 @@ router.get('/comunity', async (req, res) => {
                 }
         }
         
-        res.status(200).send({
-            ranki: await atualizaRanking(),
-            lista2: regBook
+        return res.status(200).send({
+            lista2: regBook,
+            tAG: await dBook.findOne({where: {'id': 13}})
         })
             
     } catch (error) {
@@ -1046,7 +1049,7 @@ router.post('/addrt',authMiddlew, async (req, res) => {
                 })
 
             } else {
-
+                //CASO A RESPOSTA SEJA INCORRETA - ENVIA AS INFORMAÇÕES DE RESPOSTA INCORRETA
                 const RANKATUALIZADO = await atualizaRanking()
                 const posicaoNoRank = RANKATUALIZADO.find(t => t.nick === nick);
 
