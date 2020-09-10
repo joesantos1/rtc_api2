@@ -913,15 +913,20 @@ router.post('/userauth', async (req, res) => {
     if (nickVazio || passVazio) {
 
         const error = {
-                msg: 'Por favor, digite um Nickname (ID)',
+                msg: 'Por favor, digite um Nickname (ID) ou Email',
                 msg: 'Por favor, digite uma senha'
         }
 
        return res.status(401).send({error});
 
     } else {
-
-        const user = await dUser.findOne({where: {'users_nick': nick.toLowerCase()}})
+        //PROCURA PELO USUÁRIO COM O LOGIN INFORMADO -> EMAIL OU LOGIN
+        const user = await dUser.findOne({
+            where: { [Op.or]: [
+                { 'users_nick': nick.toLowerCase() }, 
+                { 'users_email': nick.toLowerCase() }] 
+            }
+        })
 
         if(!user){
             return res.status(401).send({error: 'Usuário não encontrado.'});
@@ -929,31 +934,24 @@ router.post('/userauth', async (req, res) => {
               
        const vSenha = bcrypt.compareSync(pass, user.users_pass)
 
-                    if(!vSenha){
-                
-                        res.status(401).send({error: 'Senha incorreta.'});
+        if(!vSenha){
+    
+            return res.status(401).send({error: 'Senha incorreta.'});
 
-                        return
+        }else{
 
-                    }else{
-
-                        res.status(200).send({
-                            user: {
-                                nome: user.users_nome,
-                                nick: nick.toLowerCase(),
-                                email: user.users_email,
-                                foto: user.users_foto_url,
-                                status: user.users_status
-                            },
-                            token: generateToken({id: user.id})
-                        })
-
-                    }
-
-        
-        
+            res.status(200).send({
+                user: {
+                    nome: user.users_nome,
+                    nick: user.users_nick,
+                    email: user.users_email,
+                    foto: user.users_foto_url,
+                    status: user.users_status
+                },
+                token: generateToken({id: user.id})
+            })
+        }
     }
-
 });
 
 router.post('/addrt',authMiddlew, async (req, res) => {
