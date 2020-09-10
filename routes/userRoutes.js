@@ -850,7 +850,7 @@ router.post('/cadastrouser', validaEMAIL, async (req, res) => {
             users_nome: nome,
             users_email: email,
             users_pass: pass,
-            users_nick: nick,
+            users_nick: nick.toLowerCase(),
             users_foto_url: foto,
             users_verifica: verifica,
             users_status: 2,
@@ -921,7 +921,7 @@ router.post('/userauth', async (req, res) => {
 
     } else {
 
-        const user = await dUser.findOne({where: {'users_nick': nick}})
+        const user = await dUser.findOne({where: {'users_nick': nick.toLowerCase()}})
 
         if(!user){
             return res.status(401).send({error: 'Usuário não encontrado.'});
@@ -940,7 +940,7 @@ router.post('/userauth', async (req, res) => {
                         res.status(200).send({
                             user: {
                                 nome: user.users_nome,
-                                nick: nick,
+                                nick: nick.toLowerCase(),
                                 email: user.users_email,
                                 foto: user.users_foto_url,
                                 status: user.users_status

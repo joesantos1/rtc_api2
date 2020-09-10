@@ -140,12 +140,16 @@ module.exports = {
 
             //VALIDA NICKNAME E EMAIL ---------------    
 
+            
+
             if(!validator.isEmpty(nick) && !validator.contains(nick, ' ') && validator.isLength(nick, { min: 5 })){
 
                 if(validator.isEmail(email)){
-    
+
+                    const nk = nick.toLowerCase()
+
                     const result = await dUser.findOne({
-                        where: { [Op.or]: [{ 'users_nick': nick }, { 'users_email': email }] }
+                        where: { [Op.or]: [{ 'users_nick': nk }, { 'users_email': email }] }
                     });
         
                     if(!result){
